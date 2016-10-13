@@ -1,9 +1,15 @@
 import { Component } from '@angular/core';
-import '../../public/css/styles.css';
+// import '../styles/styles.scss';
 
 @Component({
-  selector: 'my-app',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  selector: 'rt',
+  template: require('./app.component.html'),
+  styles: [
+    require('./app.component.scss')
+  ]
 })
-export class AppComponent {}
+export class AppComponent {
+    constructor() {
+        console.log('running')
+    }
+}
