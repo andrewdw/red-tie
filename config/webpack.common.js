@@ -19,12 +19,6 @@ module.exports = {
     // new ExtractTextPlugin("style.css"),
     new ExtractTextPlugin("[name].css"),
     new webpack.optimize.CommonsChunkPlugin({ name: ['app', 'vendor', 'polyfills'], minChunks: Infinity }),
-    // new HtmlWebpackPlugin({
-    //   title: 'RED TIE TITLE',
-    //   template:'./src/index.ejs',
-    //   inject: 'body',
-    //   // favicon: './src/system/assets/img/favicon.png'
-    // })
   ],
 
   module: {

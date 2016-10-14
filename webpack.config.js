@@ -1,5 +1,5 @@
 // Look in ./config folder for webpack.dev.js
-switch (process.env.NODE_ENV) {
+switch (process.env.ENV) {
   case 'prod':
   case 'production':
     module.exports = require('./config/webpack.prod');

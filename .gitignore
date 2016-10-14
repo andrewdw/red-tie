@@ -38,3 +38,6 @@ jspm_packages
 
 # Typings info
 typings
+
+# build folder
+app/build

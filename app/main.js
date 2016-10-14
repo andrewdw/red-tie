@@ -12,12 +12,15 @@ function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({width: 1200, height: 750});
 
-  // and load the index.html of the app.
-  win.loadURL(`file://${__dirname}/index.html`);
-  // win.loadURL('http://127.0.0.1:3333/index.html');
-
-  // Open the DevTools.
-  win.webContents.openDevTools();
+  if (process.env.ENV === 'production') {
+    // and load the index.html of the app.
+    win.loadURL(`file://${__dirname}/index.html`);
+  } else {
+    // and load the index.html of the app.
+    win.loadURL(`file://${__dirname}/index-dev.html`);
+    // Open the DevTools
+    win.webContents.openDevTools();
+  }
 
   // Emitted when the window is closed.
   win.on('closed', () => {
