@@ -27,8 +27,17 @@ module.exports = {
       { test: /\.html$/, loader: 'html-loader' },
       { test: /\.scss$/,
         // loader: ExtractTextPlugin.extract('style-loader', 'css-loader?sourceMap!sass-loader?sourceMap')
-        loader: "raw!sass?includePaths[]=" + path.resolve(__dirname, "../node_modules/compass-mixins/lib")
+        loaders: [
+          'raw',
+          'sass?includePaths[]=' + path.resolve(__dirname, '../node_modules/compass-mixins/lib')
+        ]
       },
+      // { test: /\.ttf$/, loader: 'file?limit=65000&mimetype=application/octet-stream&name=public/fonts/[name].[ext]' }
+      { test: /\.svg$/, loader: 'url?limit=65000&mimetype=image/svg+xml&name=public/fonts/[name].[ext]' },
+      { test: /\.woff$/, loader: 'url?limit=65000&mimetype=application/font-woff&name=public/fonts/[name].[ext]' },
+      { test: /\.woff2$/, loader: 'url?limit=65000&mimetype=application/font-woff2&name=public/fonts/[name].[ext]' },
+      { test: /\.[ot]tf$/, loader: 'url?limit=65000&mimetype=application/octet-stream&name=public/fonts/[name].[ext]' },
+      { test: /\.eot$/, loader: 'url?limit=65000&mimetype=application/vnd.ms-fontobject&name=public/fonts/[name].[ext]' }
     ]
   }
 };
