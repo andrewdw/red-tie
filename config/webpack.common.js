@@ -1,53 +1,43 @@
 var webpack = require('webpack');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
-var helpers = require('./helpers');
+var path = require('path');
+var ExtractTextPlugin = require("extract-text-webpack-plugin");
+// var HtmlWebpackPlugin = require('html-webpack-plugin');
 
+// Webpack Config
 module.exports = {
   entry: {
     'polyfills': './src/polyfills.ts',
-    'vendor': './src/vendor.ts',
-    'app': './src/main.ts'
+    'vendor':    './src/vendor.ts',
+    'app':       './src/main.ts',
   },
 
-  resolve: {
-    extensions: ['', '.js', '.ts']
-  },
-
-  module: {
-    loaders: [
-      {
-        test: /\.ts$/,
-        loaders: ['awesome-typescript-loader', 'angular2-template-loader']
-      },
-      {
-        test: /\.html$/,
-        loader: 'html'
-      },
-      {
-        test: /\.(png|jpe?g|gif|svg|woff|woff2|ttf|eot|ico)$/,
-        loader: 'file?name=assets/[name].[hash].[ext]'
-      },
-      {
-        test: /\.css$/,
-        exclude: helpers.root('src', 'app'),
-        loader: ExtractTextPlugin.extract('style', 'css?sourceMap')
-      },
-      {
-        test: /\.css$/,
-        include: helpers.root('src', 'app'),
-        loader: 'raw'
-      }
-    ]
+  output: {
+    path: 'app/build',
   },
 
   plugins: [
-    new webpack.optimize.CommonsChunkPlugin({
-      name: ['app', 'vendor', 'polyfills']
-    }),
+    // new ExtractTextPlugin("style.css"),
+    new ExtractTextPlugin("[name].css"),
+    new webpack.optimize.CommonsChunkPlugin({ name: ['app', 'vendor', 'polyfills'], minChunks: Infinity }),
+  ],
 
-    new HtmlWebpackPlugin({
-      template: 'src/index.html'
-    })
-  ]
+  module: {
+    loaders: [
+      { test: /\.ts$/,   loader: 'awesome-typescript-loader' },
+      { test: /\.html$/, loader: 'html-loader' },
+      { test: /\.scss$/,
+        // loader: ExtractTextPlugin.extract('style-loader', 'css-loader?sourceMap!sass-loader?sourceMap')
+        loaders: [
+          'raw',
+          'sass?includePaths[]=' + path.resolve(__dirname, '../node_modules/compass-mixins/lib')
+        ]
+      },
+      // { test: /\.ttf$/, loader: 'file?limit=65000&mimetype=application/octet-stream&name=public/fonts/[name].[ext]' }
+      { test: /\.svg$/, loader: 'url?limit=65000&mimetype=image/svg+xml&name=public/fonts/[name].[ext]' },
+      { test: /\.woff$/, loader: 'url?limit=65000&mimetype=application/font-woff&name=public/fonts/[name].[ext]' },
+      { test: /\.woff2$/, loader: 'url?limit=65000&mimetype=application/font-woff2&name=public/fonts/[name].[ext]' },
+      { test: /\.[ot]tf$/, loader: 'url?limit=65000&mimetype=application/octet-stream&name=public/fonts/[name].[ext]' },
+      { test: /\.eot$/, loader: 'url?limit=65000&mimetype=application/vnd.ms-fontobject&name=public/fonts/[name].[ext]' }
+    ]
+  }
 };
