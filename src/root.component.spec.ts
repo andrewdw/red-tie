@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
+import { RootComponent } from './root.component';
 
 describe('App', () => {
   beforeEach(() => {
-    TestBed.configureTestingModule({ declarations: [AppComponent]});
+    TestBed.configureTestingModule({ declarations: [RootComponent]});
   });
   it ('should work', () => {
-    let fixture = TestBed.createComponent(AppComponent);
-    expect(fixture.componentInstance instanceof AppComponent).toBe(true, 'should create AppComponent');
+    let fixture = TestBed.createComponent(RootComponent);
+    expect(fixture.componentInstance instanceof RootComponent).toBe(true, 'should create RootComponent');
   });
 });

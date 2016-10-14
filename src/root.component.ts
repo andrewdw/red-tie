@@ -7,4 +7,4 @@ import { Component } from '@angular/core';
     require('./root.component.scss')
   ]
 })
-export class rootComponent {}
+export class RootComponent {}
