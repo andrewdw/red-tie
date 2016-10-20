@@ -1,10 +1,12 @@
 var webpack = require('webpack');
 var path = require('path');
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
+var webpackTargetElectronRenderer = require('webpack-target-electron-renderer');
+
 // var HtmlWebpackPlugin = require('html-webpack-plugin');
 
 // Webpack Config
-module.exports = {
+var config = {
   entry: {
     'polyfills': './src/polyfills.ts',
     'vendor':    './src/vendor.ts',
@@ -41,3 +43,7 @@ module.exports = {
     ]
   }
 };
+
+config.target = webpackTargetElectronRenderer(config);
+
+module.exports = config;
