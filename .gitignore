@@ -41,3 +41,6 @@ typings
 
 # build folder
 app/build
+
+# ignore config file
+config/config.ts

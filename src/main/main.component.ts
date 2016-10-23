@@ -32,7 +32,6 @@ export class MainComponent implements AfterViewInit {
   constructor(
     private http: Http
   ) {
-    console.log('testing1')
     console.log('MAIN COMPONENT ACTIVATE')
     // this.open()
     // this.getWebPage('http://phirelight.com/').subscribe((d) => {
@@ -53,16 +52,13 @@ export class MainComponent implements AfterViewInit {
     var parent = document.getElementById("foo")
     parent.appendChild(webview);
 
+      // setTimeout(function(){
+      //   webview.loadURL('http://google.ca')
+      // },5000)
       // if (parent.classList)
       //   parent.classList.add(className);
       // else
       //   parent.className += ' ' + className;
-
-    // // const webview = document.getElementById('content')
-    // node.addEventListener('ready', () => {
-    //   console.log('loaded')
-      // node.loadURL('http://phirelight.com')
-    // })
   }
   open() {
     let win = new BrowserWindow(

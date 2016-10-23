@@ -1,31 +1,119 @@
 import {
   Component,
-  ViewEncapsulation
+  ViewEncapsulation,
+  Inject
 } from '@angular/core';
 
+import {
+  Headers,
+  Http,
+} from '@angular/http';
+import { Observable } from 'rxjs/Observable';
 import { Router } from '@angular/router';
+
+import { config, ConfigInterface } from '../../../config/config';
+
+// services
 import { AuthService } from '../auth.service';
+const { remote } = require('electron')
+let { BrowserWindow } = remote;
+
+// TODO
+// - setup config file
+// - setup electron storage
+// - get user deails sent back
+// - pull creds from storage first
+// - disallow duplicate account setup
+// - relay tokens to server and bcrypt them with in session secret
+// - make browserwindow forget the reddit session after close
+// - mode the token methods to the auth service
+//
+// - store fetch time when getting token to check
+// when we need to refresh it
 
 @Component({
-  // template: '<div>test</div>',
   template: `
     <h2>Accounts</h2>
     <a [routerLink]="['/main']">main</a>
+    <a (click)="addAccount()">Add account</a>
   `,
   encapsulation: ViewEncapsulation.Native,
   styles: [
     require('./accounts.style.scss')
+  ],
+  providers: [
+    { provide: 'Window',  useValue: window }
   ]
 })
 export class AccountsComponent {
-  statusMessage: string;
-  email: string;
-  password: string;
+  randomString = 'newuserrandomstring';
+
+  authWindow: any = null;
   constructor(
-    public authService: AuthService,
-    public router: Router
+    private authService: AuthService,
+    private router: Router,
+    private http: Http,
+    @Inject('Window') private window: Window
   ) {}
-  setStatusMessage(message: string) {
-    this.statusMessage = message;
+  addAccount(): void {
+    this.authWindow = new BrowserWindow({
+      width: 800,
+      height: 600,
+      show: false,
+      'node-integration': false
+    });
+    let redditUrl = 'https://www.reddit.com/api/v1/authorize?';
+    let authUrl = `
+      ${redditUrl}client_id=${this.id}&response_type=code&state=${this.randomString}&redirect_uri=${this.uri}&duration=${this.duration}&scope=${this.scope}
+    `;
+    this.authWindow.loadURL(authUrl);
+    this.authWindow.show();
+    // listen for redirect requests
+    this.authWindow.webContents.on('did-get-redirect-request', (event: any, oldUrl: string, newUrl: string) => {
+      this.handleAuthCallback(newUrl);
+    });
+    // Reset the authWindow on close
+    this.authWindow.on('close', () => {
+      this.authWindow = null;
+    }, false);
+  }
+  handleAuthCallback(url: string): void {
+    var raw_code = /code=([^&]*)/.exec(url) || null;
+    var code = (raw_code && raw_code.length > 1) ? raw_code[1] : null;
+    var error = /error=(.+)$/.exec(url);
+    if (code || error) {
+      // Close the auth window if code found or error
+      this.authWindow.destroy();
+    }
+    // If there is a code, proceed to get token from github
+    if (code) {
+      this.requestAuthToken(code)
+        .subscribe((d) => {
+          console.log('d', d)
+        },
+        (err) => {
+          console.log(err)
+        });
+    } else if (error) {
+      alert(`Oops! Something went wrong and we couldn't log you in to Reddit. Please try again.`);
+    }
+  }
+  requestAuthToken(code: string): Observable<any> {
+    let headers = new Headers();
+    headers.append('Authorization', 'Basic ' + this.window.btoa(this.id + ':'));
+    headers.append('Content-Type', 'application/x-www-form-urlencoded');
+    let url = 'https://www.reddit.com/api/v1/access_token';
+    let body = `grant_type=authorization_code&code=${code}&redirect_uri=${this.uri}`;
+    return this.http.post(url, body, { headers })
+      .map(res => res.json())
+  }
+  refreshToken(): Observable<any> {
+    let headers = new Headers();
+    headers.append('Authorization', 'Basic ' + this.window.btoa(this.id + ':'));
+    headers.append('Content-Type', 'application/x-www-form-urlencoded');
+    let url = 'https://www.reddit.com/api/v1/access_token';
+    let body = `grant_type=refresh_token&refresh_token=REFRESHTOKEN`;
+    return this.http.post(url, body, { headers })
+      .map(res => res.json())
   }
 }

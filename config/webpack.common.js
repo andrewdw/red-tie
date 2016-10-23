@@ -3,8 +3,6 @@ var path = require('path');
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
 var webpackTargetElectronRenderer = require('webpack-target-electron-renderer');
 
-// var HtmlWebpackPlugin = require('html-webpack-plugin');
-
 // Webpack Config
 var config = {
   entry: {
