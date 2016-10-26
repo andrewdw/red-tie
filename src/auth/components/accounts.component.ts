@@ -11,7 +11,7 @@ import {
 import { Observable } from 'rxjs/Observable';
 import { Router } from '@angular/router';
 
-import { config, ConfigInterface } from '../../../config/config';
+import { config } from '../../../config/config';
 
 // services
 import { AuthService } from '../auth.service';
@@ -54,18 +54,30 @@ export class AccountsComponent {
     private router: Router,
     private http: Http,
     @Inject('Window') private window: Window
-  ) {}
+  ) {
+    // this.authService.storeAuthToken()
+
+  }
   addAccount(): void {
     this.authWindow = new BrowserWindow({
       width: 800,
       height: 600,
       show: false,
-      'node-integration': false
+      'node-integration': false,
+      // kiosk: true
+      // webPreferences: {
+      //   partition: 'tempsession'
+      //   // session: {}
+      // }
+      // webPreferences: {
+      //   partition: 'persist:xxx'
+      // }
     });
     let redditUrl = 'https://www.reddit.com/api/v1/authorize?';
     let authUrl = `
-      ${redditUrl}client_id=${this.id}&response_type=code&state=${this.randomString}&redirect_uri=${this.uri}&duration=${this.duration}&scope=${this.scope}
+      ${redditUrl}client_id=${config.reddit.client_id}&response_type=code&state=${this.randomString}&redirect_uri=${config.reddit.uri}&duration=${config.reddit.duration}&scope=${config.reddit.scope}
     `;
+    console.log(authUrl)
     this.authWindow.loadURL(authUrl);
     this.authWindow.show();
     // listen for redirect requests
@@ -87,9 +99,10 @@ export class AccountsComponent {
     }
     // If there is a code, proceed to get token from github
     if (code) {
-      this.requestAuthToken(code)
-        .subscribe((d) => {
-          console.log('d', d)
+      this.authService.requestAuthToken(code)
+        .subscribe((token) => {
+          console.log('token', token)
+          this.authService.storeAuthToken(token)
         },
         (err) => {
           console.log(err)
@@ -97,23 +110,5 @@ export class AccountsComponent {
     } else if (error) {
       alert(`Oops! Something went wrong and we couldn't log you in to Reddit. Please try again.`);
     }
-  }
-  requestAuthToken(code: string): Observable<any> {
-    let headers = new Headers();
-    headers.append('Authorization', 'Basic ' + this.window.btoa(this.id + ':'));
-    headers.append('Content-Type', 'application/x-www-form-urlencoded');
-    let url = 'https://www.reddit.com/api/v1/access_token';
-    let body = `grant_type=authorization_code&code=${code}&redirect_uri=${this.uri}`;
-    return this.http.post(url, body, { headers })
-      .map(res => res.json())
-  }
-  refreshToken(): Observable<any> {
-    let headers = new Headers();
-    headers.append('Authorization', 'Basic ' + this.window.btoa(this.id + ':'));
-    headers.append('Content-Type', 'application/x-www-form-urlencoded');
-    let url = 'https://www.reddit.com/api/v1/access_token';
-    let body = `grant_type=refresh_token&refresh_token=REFRESHTOKEN`;
-    return this.http.post(url, body, { headers })
-      .map(res => res.json())
   }
 }

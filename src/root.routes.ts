@@ -3,7 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 export const appRoutes: Routes = [
   {
     path: '',
-    redirectTo: '/accounts',
+    redirectTo: '/main',
     pathMatch: 'full'
   }
 ];

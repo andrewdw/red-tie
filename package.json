@@ -44,9 +44,7 @@
     "@angular/platform-browser-dynamic": "^2.1.0",
     "@angular/router": "^3.1.0",
     "core-js": "^2.4.1",
-    "electron": "^1.4.3",
     "rxjs": "^5.0.0-rc.1",
-    "webpack-target-electron-renderer": "^0.4.0",
     "zone.js": "^0.6.26"
   },
   "devDependencies": {
@@ -55,7 +53,8 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "css-loader": "^0.23.1",
-    "electron": "^1.4.3",
+    "electron": "^1.4.4",
+    "electron-json-storage": "^2.0.1",
     "electron-packager": "^8.1.0",
     "electron-prebuilt": "^1.4.3",
     "es6-promise": "^4.0.5",

@@ -28,7 +28,8 @@ import { routing } from './auth.routes';
   ],
   providers: [
     LoginGuard,
-    TwoFactorGuard
+    TwoFactorGuard,
+    { provide: 'Window',  useValue: window }
   ]
 })
 export class AuthModule {}

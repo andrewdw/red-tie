@@ -273,6 +273,12 @@ async@^1.3.0, async@^1.5.0:
   version "1.5.2"
   resolved "https://registry.yarnpkg.com/async/-/async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a"
 
+async@^2.0.0:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/async/-/async-2.1.2.tgz#612a4ab45ef42a70cde806bad86ee6db047e8385"
+  dependencies:
+    lodash "^4.14.0"
+
 async@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/async/-/async-2.0.1.tgz#b709cc0280a9c36f09f4536be823c838a9049e25"
@@ -1397,8 +1403,8 @@ ejs@^2.3.1:
   resolved "https://registry.yarnpkg.com/ejs/-/ejs-2.5.2.tgz#21444ba09386f0c65b6eafb96a3d51bcb3be80d1"
 
 electron:
-  version "1.4.3"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-1.4.3.tgz#b67566bd86b59d89c1172bade27ebd888e0304b7"
+  version "1.4.4"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-1.4.4.tgz#86000bce15e06cadc3566cb7c86122590dee54a5"
   dependencies:
     electron-download "^3.0.1"
     extract-zip "^1.0.3"
@@ -1424,6 +1430,15 @@ electron-download@^3.0.0, electron-download@^3.0.1:
     rc "^1.1.2"
     semver "^5.3.0"
     sumchecker "^1.2.0"
+
+electron-json-storage:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/electron-json-storage/-/electron-json-storage-2.0.1.tgz#b0bad07fca360eb4bb357a08a0ccc4ad27f14334"
+  dependencies:
+    async "^2.0.0"
+    exists-file "^2.1.0"
+    lodash "^4.0.1"
+    rimraf "^2.5.1"
 
 electron-osx-sign@^0.3.0:
   version "0.3.2"
@@ -1628,6 +1643,10 @@ eventsource@~0.1.6:
   resolved "https://registry.yarnpkg.com/eventsource/-/eventsource-0.1.6.tgz#0acede849ed7dd1ccc32c811bb11b944d4f29232"
   dependencies:
     original ">=0.0.5"
+
+exists-file@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/exists-file/-/exists-file-2.1.0.tgz#66ea39b7855a9d8ad2ff485d974f04a93bb888f8"
 
 exit-hook@^1.0.0:
   version "1.1.1"
@@ -3064,7 +3083,7 @@ lodash@^3.8.0:
   version "3.10.1"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-3.10.1.tgz#5bf45e8e49ba4189e17d482789dfd15bd140b7b6"
 
-lodash@^4.0.0, lodash@^4.0.1, lodash@^4.13.1, lodash@^4.16.2, lodash@^4.3.0, lodash@^4.5.0, lodash@^4.8.0:
+lodash@^4.0.0, lodash@^4.0.1, lodash@^4.13.1, lodash@^4.14.0, lodash@^4.16.2, lodash@^4.3.0, lodash@^4.5.0, lodash@^4.8.0:
   version "4.16.4"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.16.4.tgz#01ce306b9bad1319f2a5528674f88297aeb70127"
 
@@ -4520,7 +4539,7 @@ right-align@^0.1.1:
   dependencies:
     align-text "^0.1.1"
 
-rimraf@^2.2.8, rimraf@^2.3.3, rimraf@^2.4.4, rimraf@~2.5.0, rimraf@~2.5.1, rimraf@2:
+rimraf@^2.2.8, rimraf@^2.3.3, rimraf@^2.4.4, rimraf@^2.5.1, rimraf@~2.5.0, rimraf@~2.5.1, rimraf@2:
   version "2.5.4"
   resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-2.5.4.tgz#96800093cbf1a0c86bd95b4625467535c29dfa04"
   dependencies:
@@ -5021,8 +5040,8 @@ swap-case@^1.1.0:
     upper-case "^1.1.1"
 
 symbol-observable@^1.0.1:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/symbol-observable/-/symbol-observable-1.0.3.tgz#0fdb005e84f346a899d492beba23068b32d1525a"
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/symbol-observable/-/symbol-observable-1.0.4.tgz#29bf615d4aa7121bdd898b22d4b3f9bc4e2aa03d"
 
 tapable@^0.1.8, tapable@~0.1.8:
   version "0.1.10"

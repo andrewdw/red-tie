@@ -7,8 +7,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../auth/auth.service';
 import { AuthGuard } from '../auth/auth.guard';
-
 import { HttpModule } from '@angular/http';
+
+import { HttpService } from './services/http.service';
 
 @NgModule({
   imports: [
@@ -19,6 +20,9 @@ import { HttpModule } from '@angular/http';
     CommonModule,
     FormsModule,
     HttpModule
+  ],
+  providers: [
+    HttpService
   ]
 })
 export class SharedModule {

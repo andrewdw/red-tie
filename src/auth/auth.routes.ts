@@ -19,7 +19,7 @@ export const authRoutes: Routes = [
       {
         path: 'accounts',
         component: AccountsComponent,
-        canActivate: [LoginGuard]
+        // canActivate: [LoginGuard]
       }
     ]
   }
