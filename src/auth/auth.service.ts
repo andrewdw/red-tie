@@ -13,29 +13,9 @@ import { Router } from '@angular/router';
 import { Http, Headers } from '@angular/http';
 // storage
 const storage = require('electron-json-storage');
-import { isEmpty, isArray } from 'lodash';
+import { isEmpty, isArray, isNumber } from 'lodash';
 
 import { config } from '../../config/config';
-
-// // Site access interface
-// export interface SiteAccessInterface {
-//   client: string;
-//   lat: number;
-//   long: number;
-//   position: string;
-//   sensor: string;
-//   site: string;
-//   LatLng: {
-//     lat: number,
-//     lng: number
-//   };
-// }
-// // user info object
-// export interface UserInfoInterface {
-//   Email: string;
-//   UserID: string;
-//   Access: Array<SiteAccessInterface>;
-// }
 
 @Injectable()
 export class AuthService {
@@ -47,12 +27,14 @@ export class AuthService {
   // public currentSiteChanged = new Subject();
 
 
-  public currentAccount = null;
   // this will hold all the user account and token info
   public accounts = [];
-
+  // index of accounts array
+  public currentAccount: number = null;
   constructor(
+    // basic http service
     private http: Http,
+    // http service that requires a current account token
     private router: Router,
     @Inject('Window') private window: Window
   ) {
@@ -65,16 +47,13 @@ export class AuthService {
     });
 
 
-    // console.log(this.window)
-//     storage.clear(function(error) {
-//   if (error) throw error;
-// });
+    // // console.log(this.window)
+    // storage.clear(function(error) {
+    //   if (error) throw error;
+    // });
     // this.setAccess().subscribe((d) => {
     //     console.log(d)
     // })
-  }
-  public getInfoToken () {
-    return this.userInfoToken;
   }
   private setUserInfo(token: string) {
     // // let info = this.jwtDecode(token);
@@ -91,9 +70,6 @@ export class AuthService {
     // // when setting info get or set the current site info
     // this.setCurrentSite();
   }
-  public siteInfoEdited(oldInfo:any, newInfo:any) {
-
-  }
   public setCurrentSite(site) {
     // // TODO: pull from settings if there are any saved
     // if (!site) {
@@ -103,79 +79,6 @@ export class AuthService {
     // }
     // this.currentSiteChanged.next(this.currentSite);
   }
-  public login(email: string, password: string) {
-    // let creds = "username=" + email + "&password=" + password;
-    // let headers = new Headers();
-    // headers.append('Content-Type', 'application/x-www-form-urlencoded');
-    // return this.http.post(config.authentication+'/login', creds, { headers })
-    // .map(res => res.json())
-    // .map((res) => {
-    //     // set 2fa status based on what is returned from server
-    //     let twoFactor = (res['2FA']) ? true : false;
-    //     if (res.hasOwnProperty('token') && twoFactor) {
-    //         sessionStorage.setItem('tfa_token', res.token);
-    //     } else {
-    //         sessionStorage.setItem('auth_token', res.token);
-    //     }
-    //     return twoFactor;
-    // })
-  }
-  public submitTfa(tfa: string) {
-    // let creds = "totp="+tfa;
-    // let headers = new Headers();
-    // headers.append('Authentication', 'Bearer ' + sessionStorage.getItem('tfa_token'))
-    // return this.http.post(config.authentication+'/login/2fa', creds, { headers })
-    // .map(res => res.json())
-    // .map((res) => {
-    //     // if a token is sent back, delete the tfa token and set new auth token
-    //     if (res.hasOwnProperty('token')) {
-    //         sessionStorage.removeItem('tfa_token');
-    //         sessionStorage.setItem('auth_token', res.token);
-    //     }
-    // })
-  }
-  public setAccess() {
-    // let creds = `email=test@rapidphire.com&access=[{"client":"newClient","site":"newSite-Corp"}, {"client":"davita","site":"phirelight-dev"}]`
-    // let headers = new Headers();
-    // headers.append('Authorization', 'Bearer ' + sessionStorage.getItem('auth_token'));
-    // headers.append('Content-Type', 'application/x-www-form-urlencoded');
-    // return this.http.post(config.authorization+'/api/v1/user/access', creds, { headers })
-    // .map(res => res.json())
-    // .do((d) => {
-    //     console.log(d)
-    // })
-  }
-  private fetchUserInfo() {
-    // let headers = new Headers();
-    // headers.append('Authorization', 'Bearer ' + sessionStorage.getItem('auth_token'))
-    // return this.http.get(config.authorization+'/api/v1/user/bootstrap', { headers })
-    //     .map(res => res.json())
-    //     .map((res) => {
-    //         if (res.hasOwnProperty('token')) {
-    //             this.setUserInfo(res.token);
-    //             return true;
-    //         } else {
-    //             this.logout();
-    //             return false;
-    //         }
-    //     })
-    //     .catch((err) => {
-    //         console.log(err)
-    //         this.logout();
-    //         return Observable.of(false);
-    //     })
-  }
-  // getAccess() {
-  //     let headers = new Headers();
-  //     headers.append('Authorization', 'Bearer ' + sessionStorage.getItem('auth_token'))
-  //     return this.http.get(config.authorization+'/api/v1/user/access', { headers })
-  //         .map(res => res.json())
-  //         .catch((err) => {
-  //             console.log(err);
-  //             return Observable.of(false);
-  //         })
-  // }
-
 
   // *************
   // TODO
@@ -211,52 +114,177 @@ export class AuthService {
   storeAuthToken(token) {
     // attach current unix time to the token
     token.time = Math.round(new Date().getTime() / 1000);
-    // check to see if there is even an object to store the token in
-    storage.get('accounts', function(error, accounts) {
-      if (error) throw error;
-      // *************
-      // get info for specific token and keep it in session
-      // do nothing if there is an existing account stored
-      // if not, push to in session list
-      // *************
-      console.log(token)
-      // if no tokens at all
-      if ((isEmpty(accounts)) || (!accounts.hasOwnProperty('list')) || (!isArray(accounts.list))) {
-        // store the token
-        storage.set('accounts', { list: [ token ], current: 0 }, () => { // store current account index
-          if (error) throw error;
-          // set the current account to the only added index
-          this.currentAccount = 0;
-          // *********** also setup the session accounts list here
-          // and by setup, just push it - it should already have been created when getting info
-        })
-      } else {
-        accounts.push(token); // add new token to the list
-        // TODO: check for duplicates
-        // store the list
-        let current = accounts.length-1; // get last index
-        storage.set('accounts', { list: accounts, current: current }, () => {
-          if (error) throw error;
-          // do something
-          // set current account to the one we just added
-          this.currentAccount = current;
-          // *********** also setup the session accounts list here
-          // and by setup, just push it - it should already have been created when getting info
-        })
-      }
-    });
-  }
-  getAccountInfo(token) {
 
+    // get info for specific token and keep it in session
+    this.getAccountInfo(token).subscribe((accountInfo:any) => { // ********** add interface for info object
+      // do nothing if the account already exists in the accounts array
+      let accountExists = false;
+      for (let i = 0, len = this.accounts.length; i < len; i++) {
+        if (this.accounts[i].info.name === accountInfo.name) {
+          accountExists = true;
+          break;
+        }
+      }
+      if (accountExists) {
+        alert(`${accountInfo.name} is already in your list of accounts.`);
+        return; // do nothing after alert
+      }
+
+      // pull from accounts settings, where this token will be stored
+      storage.get('accounts', (error, accountSettings) => {
+        let settingsToSave = { list: [], current: 0 } // our default save object
+        // if the settings aren't there alreadt
+        if ((isEmpty(accountSettings)) || (!accountSettings.hasOwnProperty('list')) || (!isArray(accountSettings.list))) {
+          accountSettings = settingsToSave;
+        }
+        accountSettings.list.push(token); // push the new token to settings that we'll save
+        accountSettings.current = accountSettings.list.length - 1; // set current to the last item added
+        // store the values
+        storage.set('accounts', accountSettings, () => {
+          if (error) throw error;
+          // now that the token is saved to memory, add the user info to the token
+          token.info = accountInfo;
+          // push to session accounts list
+          this.accounts.push(token);
+          // set current account to the one we just added
+          this.currentAccount = this.accounts.length - 1;
+        })
+      })
+    }, (err) => {
+      // error getting account info from reddit
+      if (err) {
+        alert('Something went wrong, please try again.');
+      }
+    })
   }
-  // AUTH GUARDS
+  public getAllAccountsInfo() {
+
+
+    return true
+    // let test = Observable.create();
+    // let accountsObservable:any = Observable.bindCallback(storage.get);
+    // let getAccounts = accountsObservable('accounts');
+    // let accountsStream = getAccounts
+    // .flatMap((data, index) => {
+    //     return data[1].list; // pull the accounts object out of the callback
+    //   })
+    //   .map((d, index) => {
+    //     console.log('d', d)
+    //     console.log('index', index)
+    //     // return this.getAccountInfo(d)
+    //     return true
+    //   })
+    //   .do((d) => {
+    //     console.log('do', d)
+    //   })
+
+
+
+    //  accountsStream.subscribe((d) => {
+    //   console.log('streaming')
+    //   console.log(d)
+    //   return true
+    // },
+    // (err) => {
+    //   console.log('err')
+    // },
+    // () => {
+    //   console.log('complete')
+    //   test.complete(true)
+    //   return true
+    // })
+    // return test;
+
+    // let accountsObservable:any = Observable.bindCallback(storage.get);
+    // let getAccounts = accountsObservable('accounts');
+    // let accountsStream = getAccounts.flatMap((data, index) => {
+    //   return data[1].list; // pull the accounts object out of the callback
+    // }).map((d, index) => {
+    //   console.log('ind', index)
+    //   return this.getAccountInfo(d)
+    // })
+    // accountsStream.subscribe((d) => {
+    //   console.log('streaming')
+    //   console.log(d)
+    // })
+    // return true
+
+    // ************* TODO
+    // get all accoutns info with tokens and push to values in session
+    // ALSO set the current site (pull from storage)
+    // *************
+    // let list = null;
+    // let storeTokenInfo = (token, index) => {
+
+    // }
+    // // get accounts list
+    // storage.get('accounts', (error, accounts) => {
+    //   if (error) throw error;
+    //   if ((!isArray(accounts.list)) || (!isNumber(accounts.current))) {
+    //     // do something if the fetched values are not correct
+    //     // ***********
+    //   } else {
+    //     // let accountsStream = Observable.from()
+
+
+    //     let list = accounts.list;
+    //     for (let i = 0, len = accounts.list.length; i < len; i++) {
+    //       let tokenObj = accounts[i];
+    //       this.getAccountInfo(tokenObj)
+    //     }
+    // })
+    // console.log('getting accounts info')
+    // return true;
+  }
+  private getAccountInfo(tokenObj) {
+    // call http service with token defined
+    return this.get('https://oauth.reddit.com/api/v1/me', tokenObj)
+      .map(res => res.json());
+  }
+  ////////////////
+  // HTTP STUFF //
+  ////////////////
+  // NOTE: the HttpService exists in 'shared' with very similar methods.
+  // We can't use that here because that requires AuthService (this) as a dependancy
+  // and this is not fully initalized if we injected the HttpService in the constructor.
+  private bearerIsExpired(tokenObj) {
+    let currentTime = Math.round(new Date().getTime() / 1000);
+    if (currentTime >= (tokenObj.time + tokenObj.expires_in)) {
+      // the token has expired
+      return true;
+    } else {
+      // coninue
+      return false;
+    }
+  }
+  protected createGETHeader(headers: Headers, tokenObj) {
+    headers.append('Authorization', `Bearer ${tokenObj.access_token}`);
+    headers.append('Content-Type', 'application/x-www-form-urlencoded');
+  }
+  private get(url, tokenObj?) {
+    // set current token object if it's not explicitly passed
+    tokenObj = (tokenObj) ? tokenObj : this.accounts[this.currentAccount];
+    if (this.bearerIsExpired(tokenObj)) {
+      // refresh the token
+      // run the query
+      console.log('BEARER EXPIRED')
+      // ***********
+    } else {
+      let headers = new Headers();
+      this.createGETHeader(headers, tokenObj);
+      return this.http.get(url, { headers })
+    }
+  }
+  /////////////////
+  // AUTH GUARDS //
+  /////////////////
   public isAuthenticated() {
     let haskeyObservable:any = Observable.bindCallback(storage.has);
     let key = haskeyObservable('accounts');
     return key.map((d) => {
       let keyExists = d[1];
       // if token and no info, get info
-      if (keyExists && (!this.accounts)) {
+      if (keyExists && (this.accounts.length === 0)) {
         return this.getAllAccountsInfo();
       // if token (imply that there is info), continue
       } else if (keyExists) {
@@ -268,27 +296,5 @@ export class AuthService {
       }
     })
   }
-  public getAllAccountsInfo() {
-    // ************* TODO
-    // get all accoutns info with tokens and push to values in session
-    // ALSO set the current site (pull from storage)
-    // *************
-    console.log('getting accounts info')
-    return true;
-  }
-  public isLoggedOut() {
-    // // return true or false based on auth_token being present
-    // if (!!sessionStorage.getItem('auth_token')) {
-    //     this.router.navigate(['/live']);
-    //     return false;
-    // }
-    return true;
-  }
-  public isTfa() {
-    // if (!!sessionStorage.getItem('tfa_token')) {
-    //   return true;
-    // }
-    this.router.navigate(['/main']);
-    return false;
-  }
+
 }

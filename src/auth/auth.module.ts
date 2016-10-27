@@ -8,12 +8,6 @@ import { AccountsComponent } from './components/accounts.component';
 // shared modules
 import { SharedModule } from '../shared/shared.module';
 
-// services
-import {
-  LoginGuard,
-  TwoFactorGuard
-} from './auth.guard';
-
 // imports
 import { routing } from './auth.routes';
 
@@ -27,8 +21,6 @@ import { routing } from './auth.routes';
     AccountsComponent
   ],
   providers: [
-    LoginGuard,
-    TwoFactorGuard,
     { provide: 'Window',  useValue: window }
   ]
 })
