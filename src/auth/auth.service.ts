@@ -24,9 +24,8 @@ export class AuthService {
   public userInfoToken: string;
   // site info and change emitter
   // public currentSite: SiteAccessInterface = null;
-  // public currentSiteChanged = new Subject();
 
-
+  public accountsUpdated = new Subject();
   // this will hold all the user account and token info
   public accounts = [];
   // index of accounts array
@@ -38,15 +37,6 @@ export class AuthService {
     private router: Router,
     @Inject('Window') private window: Window
   ) {
-    // pull tokens from the accounts object
-
-    storage.get('accounts', function(error, data) {
-      if (error) throw error;
-
-      console.log(data);
-    });
-
-
     // // console.log(this.window)
     // storage.clear(function(error) {
     //   if (error) throw error;
@@ -54,30 +44,6 @@ export class AuthService {
     // this.setAccess().subscribe((d) => {
     //     console.log(d)
     // })
-  }
-  private setUserInfo(token: string) {
-    // // let info = this.jwtDecode(token);
-    // this.userInfo = info;
-    // this.userInfoToken = token;
-    // // we have to loop through any access values and put the lat and long
-    // // into a LatLng key for leaflet to properly read
-    // for (let i = 0, len = this.userInfo.Access.length; i < len; i++) {
-    //     this.userInfo.Access[i].LatLng = {
-    //         lat: this.userInfo.Access[i].lat,
-    //         lng: this.userInfo.Access[i].long
-    //     }
-    // }
-    // // when setting info get or set the current site info
-    // this.setCurrentSite();
-  }
-  public setCurrentSite(site) {
-    // // TODO: pull from settings if there are any saved
-    // if (!site) {
-    //     this.currentSite = (this.userInfo.Access.length > 0) ? this.userInfo.Access[0] : null;
-    // } else {
-    //     this.currentSite = site;
-    // }
-    // this.currentSiteChanged.next(this.currentSite);
   }
 
   // *************
@@ -87,6 +53,8 @@ export class AuthService {
   // change current account dropdown selector and function
   // - sends broadcast out for listeners to refresh
   // dont forget to verify the random code generation when requesting token
+  // close all windows on startup and exit
+  // - don't store session in account windows
 
   requestAuthToken(code: string): Observable<any> {
     let headers = new Headers();
@@ -94,7 +62,7 @@ export class AuthService {
     headers.append('Content-Type', 'application/x-www-form-urlencoded');
     let url = 'https://www.reddit.com/api/v1/access_token';
     let body = `grant_type=authorization_code&code=${code}&redirect_uri=${config.reddit.uri}`;
-    return this.http.post(url, body, { headers }).map(res => res.json())
+    return this.http.post(url, body, { headers }).retry(3).map(res => res.json())
   }
   refreshToken(): Observable<any> {
     let headers = new Headers();
@@ -102,16 +70,16 @@ export class AuthService {
     headers.append('Content-Type', 'application/x-www-form-urlencoded');
     let url = 'https://www.reddit.com/api/v1/access_token';
     let body = `grant_type=refresh_token&refresh_token=${this.accounts[this.currentAccount].refresh_token}`;
-    return this.http.post(url, body, { headers })
-      .map(res => res.json())
-      .do((token) => {
-        // store the new token's refresh and barer info
-        if (token) {
-          // ***************
-        }
-      })
+    return this.http.post(url, body, { headers }).retry(3).map(res => res.json())
+      // .do((token) => {
+      //   console.log('token', token)
+      //   // store the new token's refresh and barer info
+      //   if (token) {
+      //     // ***************
+      //   }
+      // })
   }
-  storeAuthToken(token) {
+  public storeAuthToken(token) {
     // attach current unix time to the token
     token.time = Math.round(new Date().getTime() / 1000);
 
@@ -158,83 +126,41 @@ export class AuthService {
     })
   }
   public getAllAccountsInfo() {
-
-
-    return true
-    // let test = Observable.create();
-    // let accountsObservable:any = Observable.bindCallback(storage.get);
-    // let getAccounts = accountsObservable('accounts');
-    // let accountsStream = getAccounts
-    // .flatMap((data, index) => {
-    //     return data[1].list; // pull the accounts object out of the callback
-    //   })
-    //   .map((d, index) => {
-    //     console.log('d', d)
-    //     console.log('index', index)
-    //     // return this.getAccountInfo(d)
-    //     return true
-    //   })
-    //   .do((d) => {
-    //     console.log('do', d)
-    //   })
-
-
-
-    //  accountsStream.subscribe((d) => {
-    //   console.log('streaming')
-    //   console.log(d)
-    //   return true
-    // },
-    // (err) => {
-    //   console.log('err')
-    // },
-    // () => {
-    //   console.log('complete')
-    //   test.complete(true)
-    //   return true
-    // })
-    // return test;
-
-    // let accountsObservable:any = Observable.bindCallback(storage.get);
-    // let getAccounts = accountsObservable('accounts');
-    // let accountsStream = getAccounts.flatMap((data, index) => {
-    //   return data[1].list; // pull the accounts object out of the callback
-    // }).map((d, index) => {
-    //   console.log('ind', index)
-    //   return this.getAccountInfo(d)
-    // })
-    // accountsStream.subscribe((d) => {
-    //   console.log('streaming')
-    //   console.log(d)
-    // })
-    // return true
-
+    // pull account info from store
+    storage.get('accounts', (error, accountSettings) => { // *********** add interface
+      // if ((!isArray(accounts.list)) || (!isNumber(accounts.current))) {
+      //   // do something if the fetched values are not correct
+      //   // ***********
+      // } else {
+      if (error) {
+        // do something
+        return;
+      }
+      let arr = [];
+      for (let i = 0, len = accountSettings.list.length; i < len; i++) {
+        arr.push(this.getAccountInfo(accountSettings.list[i]))
+      }
+      // get array of all accounts' info concurrently
+      Observable.forkJoin(arr)
+      .subscribe((infoArray) => {
+        // loop through info array and push the accountSettings to the session object with the tokens
+        for (let i = 0, len = infoArray.length; i < len; i++) {
+          let obj = accountSettings.list[i];
+          obj.info = infoArray[i];
+          this.accounts.push(obj);
+        }
+        // also set the current account index
+        this.currentAccount = accountSettings.current;
+        // broadcast the complete event now
+        this.accountsUpdated.next();
+      }, (error) => {
+        // do something
+      });
+    });
     // ************* TODO
     // get all accoutns info with tokens and push to values in session
     // ALSO set the current site (pull from storage)
     // *************
-    // let list = null;
-    // let storeTokenInfo = (token, index) => {
-
-    // }
-    // // get accounts list
-    // storage.get('accounts', (error, accounts) => {
-    //   if (error) throw error;
-    //   if ((!isArray(accounts.list)) || (!isNumber(accounts.current))) {
-    //     // do something if the fetched values are not correct
-    //     // ***********
-    //   } else {
-    //     // let accountsStream = Observable.from()
-
-
-    //     let list = accounts.list;
-    //     for (let i = 0, len = accounts.list.length; i < len; i++) {
-    //       let tokenObj = accounts[i];
-    //       this.getAccountInfo(tokenObj)
-    //     }
-    // })
-    // console.log('getting accounts info')
-    // return true;
   }
   private getAccountInfo(tokenObj) {
     // call http service with token defined
@@ -265,27 +191,33 @@ export class AuthService {
     // set current token object if it's not explicitly passed
     tokenObj = (tokenObj) ? tokenObj : this.accounts[this.currentAccount];
     if (this.bearerIsExpired(tokenObj)) {
+      console.log('BARER expired')
       // refresh the token
       // run the query
-      console.log('BEARER EXPIRED')
+      // this.refreshToken()
+      //   .subscribe()
       // ***********
     } else {
       let headers = new Headers();
       this.createGETHeader(headers, tokenObj);
-      return this.http.get(url, { headers })
+      return this.http.get(url, { headers }).retry(3);
     }
   }
   /////////////////
   // AUTH GUARDS //
   /////////////////
   public isAuthenticated() {
+    console.log(this.accounts, this.currentAccount)
     let haskeyObservable:any = Observable.bindCallback(storage.has);
     let key = haskeyObservable('accounts');
     return key.map((d) => {
       let keyExists = d[1];
       // if token and no info, get info
       if (keyExists && (this.accounts.length === 0)) {
-        return this.getAllAccountsInfo();
+        // run the function that will collect user info for tokens
+        // main component should run loading sequence till this function fires a finished event
+        this.getAllAccountsInfo();
+        return true
       // if token (imply that there is info), continue
       } else if (keyExists) {
         return true;

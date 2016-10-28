@@ -13,20 +13,20 @@ export class HttpService {
   protected createAuthHeader(headers: Headers, tokenObj) {
     headers.append('Authorization', `Bearer ${tokenObj.access_token}`);
   }
-  private barerIsExpired(tokenObj) {
+  private bearerIsExpired(tokenObj) {
     let currentTime = Math.round(new Date().getTime() / 1000);
     if (currentTime >= (tokenObj.time + tokenObj.expires_in)) {
       // the token has expired
       return true;
     } else {
-      // coninue
+      // continue
       return false;
     }
   }
   public get(url, tokenObj?) {
     // set current token object if it's not explicitly passed
     tokenObj = (tokenObj) ? tokenObj : this.authService.accounts[this.authService.currentAccount];
-    if (this.barerIsExpired(tokenObj)) {
+    if (this.bearerIsExpired(tokenObj)) {
       // refresh the token
       // run the query
       // ***********
@@ -39,7 +39,7 @@ export class HttpService {
   public post(url, data, tokenObj?) {
     // set current token object if it's not explicitly passed
     tokenObj = (tokenObj) ? tokenObj : this.authService.accounts[this.authService.currentAccount];
-    if (this.barerIsExpired(tokenObj)) {
+    if (this.bearerIsExpired(tokenObj)) {
       // refresh the token
       // run the query
       // ***********
