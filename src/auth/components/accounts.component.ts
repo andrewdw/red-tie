@@ -54,10 +54,7 @@ export class AccountsComponent {
     private router: Router,
     private http: Http,
     @Inject('Window') private window: Window
-  ) {
-    // this.authService.storeAuthToken()
-
-  }
+  ) {}
   addAccount(): void {
     this.authWindow = new BrowserWindow({
       width: 800,
@@ -100,13 +97,15 @@ export class AccountsComponent {
     // If there is a code, proceed to get token from github
     if (code) {
       this.authService.requestAuthToken(code)
-        .subscribe((token) => {
-          console.log('token', token)
-          this.authService.storeAuthToken(token)
-        },
-        (err) => {
-          console.log(err)
-        });
+        .flatMap((token) => {
+          console.log('token bout to be saved here')
+          return this.authService.storeNewAuthToken(token);
+        })
+        .subscribe(() => {},
+          (err) => {
+            alert(err);
+          }
+        )
     } else if (error) {
       alert(`Oops! Something went wrong and we couldn't log you in to Reddit. Please try again.`);
     }
