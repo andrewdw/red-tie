@@ -3,6 +3,7 @@ import {
   Inject
 } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
+const Rx = require('rxjs/Rx')
 import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/do';
@@ -17,23 +18,39 @@ import { isEmpty, isArray, isNumber } from 'lodash';
 
 import { config } from '../../config/config';
 
+// import { test } from '../../../observable-json-storage';
+
+const ojs = require("observable-json-storage");
+console.log('json store module', ojs)
+
+
+// var test2 = require('observable-json-storage')
+// console.log(test2)
+
+interface AccountToken {
+  access_token: string;
+  device_id?: string; // only present in refresh response, not ofiginal request
+  expires_in: number;
+  scope: string;
+  time: number;
+  token_type: string;
+  refresh_token?: string; // only present in original request
+  info?: any; // account info sent back from reddit
+}
+
 @Injectable()
 export class AuthService {
   // private jwtDecode = JwtDecode;
   // public userInfo: UserInfoInterface = null; // public block of user info exposed by class methods
   public userInfoToken: string;
   // site info and change emitter
-  // public currentSite: SiteAccessInterface = null;
-
   public accountsUpdated = new Subject();
   // this will hold all the user account and token info
   public accounts = [];
   // index of accounts array
   public currentAccount: number = null;
   constructor(
-    // basic http service
     private http: Http,
-    // http service that requires a current account token
     private router: Router,
     @Inject('Window') private window: Window
   ) {
@@ -43,6 +60,46 @@ export class AuthService {
     // });
     // this.setAccess().subscribe((d) => {
     //     console.log(d)
+    // })
+    console.log('running get')
+    // ojs.set('accounts', { key: 'value' }).subscribe(() => {
+    //   console.log('SUCCESS save')
+    // })
+
+    // ojs.keys().subscribe((keys) => {
+    //   console.log('KEYS')
+    //   console.log(keys)
+    // }, (err) => {
+    //   console.log('KEYS ERR')
+    //   console.log(err)
+    // })
+
+    // ojs.has('accounts').subscribe((data) => {
+    //   console.log('HAS')
+    //   console.log(data)
+    // }, (err) => {
+    //   console.log('HAS ERR')
+    //   console.log(err)
+    // })
+
+    // ojs.set('accounts', {'key': 'value'}).subscribe((data) => {
+    //   console.log('SET')
+    //   console.log(data)
+    // }, (err) => {
+    //   console.log('SET ERR')
+    //   console.log(err)
+    // })
+
+    // ojs.remove('test').subscribe((data) => {
+    //   console.log('HAS')
+    //   console.log(data)
+    // }, (err) => {
+    //   console.log('HAS ERR')
+    //   console.log(err)
+    // })
+
+    // ojs.clear().subscribe(() => {
+    //   console.log('cleared')
     // })
   }
 
@@ -62,24 +119,22 @@ export class AuthService {
     headers.append('Content-Type', 'application/x-www-form-urlencoded');
     let url = 'https://www.reddit.com/api/v1/access_token';
     let body = `grant_type=authorization_code&code=${code}&redirect_uri=${config.reddit.uri}`;
-    return this.http.post(url, body, { headers }).retry(3).map(res => res.json())
+    return this.http.post(url, body, { headers }).retry(3).map(res => res.json());
   }
-  refreshToken(): Observable<any> {
+  refreshSpecificToken(tokenObj): any {
     let headers = new Headers();
     headers.append('Authorization', 'Basic ' + this.window.btoa(config.reddit.client_id + ':'));
     headers.append('Content-Type', 'application/x-www-form-urlencoded');
     let url = 'https://www.reddit.com/api/v1/access_token';
-    let body = `grant_type=refresh_token&refresh_token=${this.accounts[this.currentAccount].refresh_token}`;
-    return this.http.post(url, body, { headers }).retry(3).map(res => res.json())
-      // .do((token) => {
-      //   console.log('token', token)
-      //   // store the new token's refresh and barer info
-      //   if (token) {
-      //     // ***************
-      //   }
-      // })
+    let body = `grant_type=refresh_token&refresh_token=${tokenObj.refresh_token}`;
+    console.log('pausing token refresh here')
+    return
+    return this.http.post(url, body, { headers }).retry(3).map(res => res.json());
   }
-  public storeAuthToken(token) {
+  storeRefreshToken(token) {
+    // take refresh token and put it in the current
+  }
+  public storeNewAuthToken(token:AccountToken) {
     // attach current unix time to the token
     token.time = Math.round(new Date().getTime() / 1000);
 
@@ -125,7 +180,16 @@ export class AuthService {
       }
     })
   }
-  public getAllAccountsInfo() {
+  public getAllAccountsInfo(): void {
+    return ojs.get('accounts')
+      .map((accounts) {
+        console.log('accounts', accounts)
+      })
+
+    // return Observable.create((observer) => {
+
+    // }).first()
+
     // pull account info from store
     storage.get('accounts', (error, accountSettings) => { // *********** add interface
       // if ((!isArray(accounts.list)) || (!isNumber(accounts.current))) {
@@ -157,12 +221,8 @@ export class AuthService {
         // do something
       });
     });
-    // ************* TODO
-    // get all accoutns info with tokens and push to values in session
-    // ALSO set the current site (pull from storage)
-    // *************
   }
-  private getAccountInfo(tokenObj) {
+  private getAccountInfo(tokenObj:AccountToken) {
     // call http service with token defined
     return this.get('https://oauth.reddit.com/api/v1/me', tokenObj)
       .map(res => res.json());
@@ -187,46 +247,142 @@ export class AuthService {
     headers.append('Authorization', `Bearer ${tokenObj.access_token}`);
     headers.append('Content-Type', 'application/x-www-form-urlencoded');
   }
-  private get(url, tokenObj?) {
+  private get(url, tokenObj?): Observable<any> {
     // set current token object if it's not explicitly passed
     tokenObj = (tokenObj) ? tokenObj : this.accounts[this.currentAccount];
+    console.log('is barer expired', this.bearerIsExpired(tokenObj), tokenObj)
     if (this.bearerIsExpired(tokenObj)) {
-      console.log('BARER expired')
-      // refresh the token
-      // run the query
-      // this.refreshToken()
-      //   .subscribe()
-      // ***********
+      console.log('THIS BEARER expired')
+      // we need to chain the refresh function to the get request
+      let oldTokenObj = tokenObj; // rename it to limit confusion later
+      let accountSettings, tokenIndex = 0;
+      let getSettingsObservable:any = Observable.bindCallback(storage.get);
+      let setSettingsObservable:any = Observable.bindCallback(storage.set);
+      return getSettingsObservable('accounts').flatMap((d) => {
+        // TODO: do something with the error (d[0])
+        // store the account settings into our local variable declared above
+        accountSettings = d[1];
+        // now look for refresh the token also declared above
+        return this.refreshSpecificToken(oldTokenObj);
+      })
+      .flatMap((token) => {
+        // when we store the token later we need to know which index item it is.. so lets search here
+        for (let i = 0, len = accountSettings.list.length; i < len; i++) {
+          // compare the old token with the access settings
+          if (accountSettings.list[i].access_token === oldTokenObj.access_token) {
+            console.log('found index')
+            tokenIndex = i; // set index
+            break; // end loop
+          }
+        }
+        // store token in local variable
+        // attach current unix time to the new token
+        token.time = Math.round(new Date().getTime() / 1000);
+        // NOTE: The new token is identical to the user token except it does NOT have the `refresh_token` key present...
+        // so we'll add it to the new token from the old
+        token.refresh_token = oldTokenObj.refresh_token;
+        // put the new token back to our accounts list
+        accountSettings.list[tokenIndex] = token;
+        // if the session accounts list is built, also put the relevant info there
+        if (this.accounts.length > 0) {
+          let tempOldObj = this.accounts[tokenIndex];
+          // we create a temp new object because we dont't want the account info (username, etc..) stored in the localSorage
+          let tempNewObj = Object.create(token);
+          tempNewObj.info = tempOldObj.info;
+          this.accounts[tokenIndex] = tempNewObj;
+        }
+        console.log('----------')
+        console.log('new token object', token)
+        console.log('settings to save', accountSettings)
+        console.log('this token index', tokenIndex)
+        console.log('session accounts', this.accounts)
+        console.log('----------')
+        // save the token
+        // return setSettingsObservable('accounts', accountSettings);
+      })
+      .map((d) => {
+        // continue with data request
+        console.log('---------------')
+        console.log('saved', d);
+        console.log(accountSettings.list[tokenIndex])
+        console.log('---------------')
+        let headers = new Headers();
+        this.createGETHeader(headers, accountSettings.list[tokenIndex]);
+
+        //***************
+        setTimeout(()=> {
+          storage.get('accounts', (error, accountSettings) => { // *********** add interface
+            console.log('got settings', accountSettings)
+          }, 6000)
+        })
+        //**************
+
+        return this.http.get(url, { headers })
+      })
     } else {
       let headers = new Headers();
       this.createGETHeader(headers, tokenObj);
-      return this.http.get(url, { headers }).retry(3);
+      return this.http.get(url, { headers })
     }
   }
   /////////////////
   // AUTH GUARDS //
   /////////////////
   public isAuthenticated() {
-    console.log(this.accounts, this.currentAccount)
-    let haskeyObservable:any = Observable.bindCallback(storage.has);
-    let key = haskeyObservable('accounts');
-    return key.map((d) => {
-      let keyExists = d[1];
-      // if token and no info, get info
-      if (keyExists && (this.accounts.length === 0)) {
-        // run the function that will collect user info for tokens
-        // main component should run loading sequence till this function fires a finished event
-        this.getAllAccountsInfo();
-        return true
-      // if token (imply that there is info), continue
-      } else if (keyExists) {
-        return true;
-      } else {
-        // else reject to accounts page
-        this.router.navigate(['/accounts']);
-        return false;
-      }
-    })
+    return Observable.create((observer) => {
+      ojs.has('accounts')
+      .flatMap((keyExists) => {
+        if (keyExists && (this.accounts.length === 0)) {
+          return Observable.of(true);
+        } else if (keyExists) {
+          return Observable.of(true);
+        } else {
+          // else reject to accounts page
+          this.router.navigate(['/accounts']);
+          return Observable.of(false);
+        }
+      })
+      .subscribe((res) => {
+        console.log(res)
+        // if token and no info, get info
+        observer.next(res);
+        observer.complete();
+      })
+      // .subscribe((keyExists) => {
+      //   // if token and no info, get info
+      //   if (keyExists && (this.accounts.length === 0)) {
+      //     console.log('has key')
+      //     return observer.next(true);
+      //   } else if (keyExists) {
+      //     return observer.next(true);
+      //   } else {
+      //     // else reject to accounts page
+      //     this.router.navigate(['/accounts']);
+      //     return observer.next(false);
+      //   }
+      // })
+    }).first();
+    // console.log(this.accounts, this.currentAccount)
+    // let haskeyObservable:any = Observable.bindCallback(storage.has);
+    // let key = haskeyObservable('accounts');
+    // return key.map((d) => {
+    //   let keyExists = d[1];
+    //   // if token and no info, get info
+    //   if (keyExists && (this.accounts.length === 0)) {
+    //     // run the function that will collect user info for tokens
+    //     // main component should run loading sequence till this function fires a finished event
+    //     this.getAllAccountsInfo();
+    //     console.log('getting all accounts info')
+    //     return true;
+    //   // if token (imply that there is info), continue
+    //   } else if (keyExists) {
+    //     return true;
+    //   } else {
+    //     // else reject to accounts page
+    //     this.router.navigate(['/accounts']);
+    //     return false;
+    //   }
+    // })
   }
 
 }
