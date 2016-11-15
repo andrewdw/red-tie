@@ -27,9 +27,8 @@ let { BrowserWindow } = remote;
 // - relay tokens to server and bcrypt them with in session secret
 // - make browserwindow forget the reddit session after close
 // - mode the token methods to the auth service
-//
-// - store fetch time when getting token to check
-// when we need to refresh it
+
+// - COMPARE RANDOM TOKEN STRING
 
 @Component({
   template: `
