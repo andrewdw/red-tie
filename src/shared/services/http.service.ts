@@ -37,7 +37,7 @@ export class HttpService {
           // continue with request after fetching new token
           let headers = new Headers();
           this.authService.createGETHeader(headers, token);
-          return this.http.get(url, { headers })
+          return this.http.post(url, { headers })
         })
     } else {
       let headers = new Headers();
