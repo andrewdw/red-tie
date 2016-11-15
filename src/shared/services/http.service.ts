@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
 import { Http, Headers } from '@angular/http';
-import { AuthService } from '../../auth/auth.service';
-
- // ******** write interface for token object
+import { AuthService, AccountTokenInterface } from '../../auth/auth.service';
 
 @Injectable()
 export class HttpService {
@@ -10,42 +9,39 @@ export class HttpService {
     private http: Http,
     private authService: AuthService
   ) {}
-  protected createAuthHeader(headers: Headers, tokenObj) {
-    headers.append('Authorization', `Bearer ${tokenObj.access_token}`);
-  }
-  private bearerIsExpired(tokenObj) {
-    let currentTime = Math.round(new Date().getTime() / 1000);
-    if (currentTime >= (tokenObj.time + tokenObj.expires_in)) {
-      // the token has expired
-      return true;
-    } else {
-      // continue
-      return false;
-    }
-  }
-  public get(url, tokenObj?) {
+  public get(url: string, tokenObj?: AccountTokenInterface): Observable<any> {
     // set current token object if it's not explicitly passed
     tokenObj = (tokenObj) ? tokenObj : this.authService.accounts[this.authService.currentAccount];
-    if (this.bearerIsExpired(tokenObj)) {
+    if (this.authService.bearerIsExpired(tokenObj)) {
       // refresh the token
-      // run the query
-      // ***********
+      return this.authService.refreshToken(tokenObj)
+        .flatMap((token) => {
+          // continue with request after fetching new token
+          let headers = new Headers();
+          this.authService.createGETHeader(headers, token);
+          return this.http.get(url, { headers })
+        })
     } else {
       let headers = new Headers();
-      this.createAuthHeader(headers, tokenObj);
+      this.authService.createGETHeader(headers, tokenObj);
       return this.http.get(url, { headers })
     }
   }
-  public post(url, data, tokenObj?) {
+  public post(url: string, data: any, tokenObj?: AccountTokenInterface): Observable<any> {
     // set current token object if it's not explicitly passed
     tokenObj = (tokenObj) ? tokenObj : this.authService.accounts[this.authService.currentAccount];
-    if (this.bearerIsExpired(tokenObj)) {
+    if (this.authService.bearerIsExpired(tokenObj)) {
       // refresh the token
-      // run the query
-      // ***********
+      return this.authService.refreshToken(tokenObj)
+        .flatMap((token) => {
+          // continue with request after fetching new token
+          let headers = new Headers();
+          this.authService.createGETHeader(headers, token);
+          return this.http.get(url, { headers })
+        })
     } else {
       let headers = new Headers();
-      this.createAuthHeader(headers, tokenObj);
+      this.authService.createGETHeader(headers, tokenObj);
       return this.http.post(url, data, { headers });
     }
   }

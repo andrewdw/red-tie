@@ -98,7 +98,6 @@ export class AccountsComponent {
     if (code) {
       this.authService.requestAuthToken(code)
         .flatMap((token) => {
-          console.log('token bout to be saved here')
           return this.authService.storeNewAuthToken(token);
         })
         .subscribe(() => {},
