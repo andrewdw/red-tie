@@ -193,7 +193,7 @@ export class AuthService {
     return Observable.create((observer) => {
       let trySave = () => {
         return setInterval(() => {
-          // so nothing if active
+          // do nothing if save in progress
           if (this.activeFileSave) { return }
           // once no longer active, set it again
           this.activeFileSave = true;
@@ -211,6 +211,9 @@ export class AuthService {
               observer.complete();
               // set active back to false
               this.activeFileSave = false;
+            }, (err) => {
+              // do something on err
+              // *********************
             })
         }, 10) // try to save every 10 miliseconds
       }
