@@ -192,7 +192,7 @@ export class AuthService {
     let interval;
     return Observable.create((observer) => {
       let trySave = () => {
-        return setInterval(() => {
+        return this.window.setInterval(() => {
           // do nothing if save in progress
           if (this.activeFileSave) { return }
           // once no longer active, set it again
@@ -220,9 +220,9 @@ export class AuthService {
       // set interval
       interval = trySave();
       // dispose of interval vars
-      return function () {
+      return () => {
         if (interval) {
-          clearInterval(interval);
+          this.window.clearInterval(interval);
           interval = null;
         }
       };

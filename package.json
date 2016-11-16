@@ -45,6 +45,7 @@
     "@angular/router": "^3.1.0",
     "core-js": "^2.4.1",
     "observable-json-storage": "^1.0.4",
+    "randomstring": "^1.1.5",
     "rxjs": "^5.0.0-rc.2",
     "sqlite3": "^3.1.8",
     "zone.js": "^0.6.26"
