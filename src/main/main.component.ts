@@ -20,7 +20,7 @@ let { BrowserWindow } = remote;
   template: `
     <h2>Main Component</h2>
      <div id="foo"></div>
-     <a [routerLink]="['/accounts']">accounts</a>
+     <a [routerLink]="['/auth/accounts']">accounts</a>
   `,
   encapsulation: ViewEncapsulation.Emulated,
   styles: [

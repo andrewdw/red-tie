@@ -279,7 +279,7 @@ export class AuthService {
           return Observable.of(true);
         } else {
           // else reject to accounts page
-          this.router.navigate(['/accounts']);
+          this.router.navigate(['/auth/accounts']);
           return Observable.of(false);
         }
       })

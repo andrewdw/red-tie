@@ -7,7 +7,7 @@ import { AccountsComponent } from './components/accounts.component';
 
 export const authRoutes: Routes = [
   {
-    path: '',
+    path: 'auth',
     component: AuthComponent,
     children: [
       {
